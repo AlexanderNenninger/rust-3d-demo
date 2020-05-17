@@ -6,3 +6,6 @@ pub use color_2d_gradient::*;
 
 mod graph_3d;
 pub use graph_3d::*;
+
+mod mesh;
+pub use mesh::*;

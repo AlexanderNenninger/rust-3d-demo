@@ -5,6 +5,7 @@ use web_sys::WebGlRenderingContext as GL;
 
 #[macro_use]
 extern crate lazy_static;
+extern crate genmesh;
 
 mod app_state;
 mod common_funcs;
@@ -13,18 +14,22 @@ mod gl_setup;
 mod programs;
 mod shaders;
 
+// Write to browserv console
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace = console)]
     fn log(s: &str);
 }
 
+pub fn debug_log<T: std::fmt::Debug>(obj: &T, message: &str) {
+    log(&format!("{0} :{1:?}", message, obj));
+}
+
+// Tidy variable management
 #[wasm_bindgen]
 pub struct DougsClient {
     gl: WebGlRenderingContext,
-    _program_color_2d: programs::Color2D,
-    _program_color_2d_gradient: programs::Color2DGradient,
-    program_graph_3d: programs::Graph3D,
+    program_mesh: programs::Mesh,
 }
 
 #[wasm_bindgen]
@@ -35,9 +40,7 @@ impl DougsClient {
         let gl = gl_setup::initialize_webgl_context().unwrap();
 
         Self {
-            _program_color_2d: programs::Color2D::new(&gl),
-            _program_color_2d_gradient: programs::Color2DGradient::new(&gl),
-            program_graph_3d: programs::Graph3D::new(&gl),
+            program_mesh: programs::Mesh::new(&gl),
             gl: gl,
         }
     }
@@ -51,28 +54,29 @@ impl DougsClient {
         self.gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT);
 
         let curr_state = app_state::get_curr_state();
+        let grid = common_funcs::get_position_grid_n_by_n(constants::GRID_SIZE);
+        // Clone, iter skip, step over, collect
+        let mut x_vals : Vec<f32> = grid.0.clone().into_iter().step_by(3).collect();
+        // Clone, iter skip, step over, collect
+        let mut z_vals : Vec<f32> = grid.0.clone().into_iter().skip(2).step_by(3).collect();
+        // Clone, iter skip, step over, collect
+        let mut y_vals : Vec<f32> = x_vals.iter().zip(z_vals.iter()).map(|xz| xz.0*xz.0 + xz.1*xz.1).collect();
+        // Make a mesh
+        let mut vertices: Vec<f32> = vec![0.; grid.0.len()];
+        for i in 0..vertices.len() {
+            vertices[i] = match i%3 {
+                0 => x_vals[i / 3],
+                1 => y_vals[i / 3],
+                _ => z_vals[i / 3],
+            };
+        }
 
-        // self.program_color_2d.render(
-        //     &self.gl,
-        //     curr_state.control_bottom,
-        //     curr_state.control_top,
-        //     curr_state.control_left,
-        //     curr_state.control_right,
-        //     curr_state.canvas_height,
-        //     curr_state.canvas_width,
-        // );
 
-        // self.program_color_2d_gradient.render(
-        //     &self.gl,
-        //     curr_state.control_bottom + 20.,
-        //     curr_state.control_top - 20.,
-        //     curr_state.control_left + 20.,
-        //     curr_state.control_right - 20.,
-        //     curr_state.canvas_height,
-        //     curr_state.canvas_width,
-        // );
+        // Normals
+        let normals = common_funcs::get_grid_normals(constants::GRID_SIZE, &y_vals);
 
-        self.program_graph_3d.render(
+
+        self.program_mesh.render(
             &self.gl,
             curr_state.control_bottom,
             curr_state.control_top,
@@ -82,7 +86,8 @@ impl DougsClient {
             curr_state.canvas_width,
             curr_state.rotation_x_axis,
             curr_state.rotation_y_axis,
-            &common_funcs::get_updated_3d_y_values(curr_state.time),
+            &vertices,
+            &normals,
         );
     }
 }
