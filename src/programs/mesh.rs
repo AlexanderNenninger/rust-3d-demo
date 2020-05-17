@@ -7,7 +7,6 @@ use web_sys::*;
 pub struct Mesh {
     pub program: WebGlProgram,
     pub indices_buffer: WebGlBuffer,
-    pub index_count: i32,
     pub normals_buffer: WebGlBuffer,
     pub position_buffer: WebGlBuffer,
     pub u_normals_rotation: WebGlUniformLocation,
@@ -17,26 +16,12 @@ pub struct Mesh {
 
 impl Mesh {
     pub fn new(gl: &WebGlRenderingContext) -> Self {
+        // Assemble program
         let program = cf::link_program(
             &gl,
             &super::super::shaders::vertex::mesh::SHADER,
             &super::super::shaders::fragment::varying_color_from_vertex::SHADER,
         ).unwrap();
-
-        let positions_and_indices = cf::get_position_grid_n_by_n(super::super::constants::GRID_SIZE);
-
-        let indices_memory_buffer = wasm_bindgen::memory()
-            .dyn_into::<WebAssembly::Memory>()
-            .unwrap()
-            .buffer();
-        let indices_location = positions_and_indices.1.as_ptr() as u32 / 2;
-        let indices_array = js_sys::Uint16Array::new(&indices_memory_buffer).subarray(
-            indices_location,
-            indices_location + positions_and_indices.1.len() as u32,
-        );
-        let buffer_indices = gl.create_buffer().unwrap();
-        gl.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&buffer_indices));
-        gl.buffer_data_with_array_buffer_view(GL::ELEMENT_ARRAY_BUFFER, &indices_array, GL::DYNAMIC_DRAW);
 
         Self {
             u_normals_rotation: gl.get_uniform_location(&program, "uNormalsRotation").unwrap(),
@@ -44,10 +29,9 @@ impl Mesh {
             u_projection: gl.get_uniform_location(&program, "uProjection").unwrap(),
             program: program,
 
-            indices_buffer: buffer_indices,
-            index_count: indices_array.length() as i32,
+            indices_buffer: gl.create_buffer().ok_or(" failed indices create buffer").unwrap(),
             normals_buffer: gl.create_buffer().ok_or("failed normals create buffer").unwrap(),
-            position_buffer: gl.create_buffer().ok_or("failed normals create buffer").unwrap(),
+            position_buffer: gl.create_buffer().ok_or("failed position create buffer").unwrap(),
         }
     }
 
@@ -64,6 +48,7 @@ impl Mesh {
         rotation_angle_y_axis: f32,
         vertex_vals: &Vec<f32>,
         normal_vals: &Vec<f32>,
+        index_vals: &Vec<u16>,
     ) {
         gl.use_program(Some(&self.program));
         // Generate Matrices
@@ -77,7 +62,7 @@ impl Mesh {
             rotation_angle_x_axis,
             rotation_angle_y_axis,
         );
-        // Bind to constants
+        // Bind constants
         gl.uniform_matrix4fv_with_f32_array(
             Some(&self.u_projection),
             false,
@@ -128,8 +113,21 @@ impl Mesh {
         );
         
         // Indices
-        gl.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&self.indices_buffer));
-
-        gl.draw_elements_with_i32(GL::TRIANGLES, self.index_count, GL::UNSIGNED_SHORT, 0);
+        let index_count: i32 = index_vals.len() as i32;
+        let indices_memory_buffer = wasm_bindgen::memory()
+            .dyn_into::<WebAssembly::Memory>()
+            .unwrap()
+            .buffer();
+        let indices_location = index_vals.as_ptr() as u32 / 2;
+        let indices_array = js_sys::Uint16Array::new(&indices_memory_buffer).subarray(
+            indices_location,
+            indices_location + index_vals.len() as u32,
+        );
+        let buffer_indices = gl.create_buffer().unwrap();
+        gl.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&buffer_indices));
+        gl.buffer_data_with_array_buffer_view(GL::ELEMENT_ARRAY_BUFFER, &indices_array, GL::DYNAMIC_DRAW);
+        
+        // Draw
+        gl.draw_elements_with_i32(GL::TRIANGLES, index_count, GL::UNSIGNED_SHORT, 0);
     }
 }

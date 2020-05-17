@@ -54,13 +54,15 @@ impl DougsClient {
         self.gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT);
 
         let curr_state = app_state::get_curr_state();
+
+        // Generate some test data
         let grid = common_funcs::get_position_grid_n_by_n(constants::GRID_SIZE);
         // Clone, iter skip, step over, collect
         let mut x_vals : Vec<f32> = grid.0.clone().into_iter().step_by(3).collect();
         // Clone, iter skip, step over, collect
         let mut z_vals : Vec<f32> = grid.0.clone().into_iter().skip(2).step_by(3).collect();
         // Clone, iter skip, step over, collect
-        let mut y_vals : Vec<f32> = x_vals.iter().zip(z_vals.iter()).map(|xz| xz.0*xz.0 + xz.1*xz.1).collect();
+        let mut y_vals : Vec<f32> = x_vals.iter().zip(z_vals.iter()).map(|xz| (xz.0*xz.0 + xz.1*xz.1).sqrt() - 1.).collect();
         // Make a mesh
         let mut vertices: Vec<f32> = vec![0.; grid.0.len()];
         for i in 0..vertices.len() {
@@ -70,7 +72,8 @@ impl DougsClient {
                 _ => z_vals[i / 3],
             };
         }
-
+        // Indices
+        let indices = grid.1;
 
         // Normals
         let normals = common_funcs::get_grid_normals(constants::GRID_SIZE, &y_vals);
@@ -88,6 +91,7 @@ impl DougsClient {
             curr_state.rotation_y_axis,
             &vertices,
             &normals,
+            &indices,
         );
     }
 }

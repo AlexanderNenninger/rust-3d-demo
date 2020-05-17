@@ -64,7 +64,8 @@ impl Graph3D {
             y_buffer: gl.create_buffer().ok_or("failed to create buffer").unwrap(),
         }
     }
-
+    
+    #[allow(dead_code)]
     pub fn render(
         &self,
         gl: &WebGlRenderingContext,
