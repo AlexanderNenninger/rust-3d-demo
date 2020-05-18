@@ -122,12 +122,12 @@ impl Mesh {
         gl.vertex_attrib_pointer_with_i32(2, 3, GL::FLOAT, false, 0, 0);
         gl.enable_vertex_attrib_array(2);
 
-        let vert_memory_buffer = wasm_bindgen::memory()
+        let color_memory_buffer = wasm_bindgen::memory()
             .dyn_into::<WebAssembly::Memory>()
             .unwrap()
             .buffer();
         let color_location = color_vals.as_ptr() as u32 / 4;
-        let color_array = js_sys::Float32Array::new(&vert_memory_buffer).subarray(
+        let color_array = js_sys::Float32Array::new(&color_memory_buffer).subarray(
             color_location,
             color_location + color_vals.len() as u32,
         );
