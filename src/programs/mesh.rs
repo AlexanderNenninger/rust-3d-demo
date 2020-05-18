@@ -9,6 +9,7 @@ pub struct Mesh {
     pub indices_buffer: WebGlBuffer,
     pub normals_buffer: WebGlBuffer,
     pub position_buffer: WebGlBuffer,
+    pub color_buffer: WebGlBuffer,
     pub u_normals_rotation: WebGlUniformLocation,
     pub u_opacity: WebGlUniformLocation,
     pub u_projection: WebGlUniformLocation,
@@ -32,6 +33,7 @@ impl Mesh {
             indices_buffer: gl.create_buffer().ok_or(" failed indices create buffer").unwrap(),
             normals_buffer: gl.create_buffer().ok_or("failed normals create buffer").unwrap(),
             position_buffer: gl.create_buffer().ok_or("failed position create buffer").unwrap(),
+            color_buffer: gl.create_buffer().ok_or("failed color create buffer").unwrap(),
         }
     }
 
@@ -50,6 +52,7 @@ impl Mesh {
         vertex_vals: &Vec<f32>,
         normal_vals: &Vec<f32>,
         index_vals: &Vec<u16>,
+        color_vals: &Vec<f32>
     ) {
         gl.use_program(Some(&self.program));
         // Generate Matrices
@@ -114,6 +117,22 @@ impl Mesh {
             GL::DYNAMIC_DRAW,
         );
         
+        // Colors
+        gl.bind_buffer(GL::ARRAY_BUFFER, Some(&self.color_buffer));
+        gl.vertex_attrib_pointer_with_i32(2, 3, GL::FLOAT, false, 0, 0);
+        gl.enable_vertex_attrib_array(2);
+
+        let vert_memory_buffer = wasm_bindgen::memory()
+            .dyn_into::<WebAssembly::Memory>()
+            .unwrap()
+            .buffer();
+        let color_location = color_vals.as_ptr() as u32 / 4;
+        let color_array = js_sys::Float32Array::new(&vert_memory_buffer).subarray(
+            color_location,
+            color_location + color_vals.len() as u32,
+        );
+        gl.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &vert_array, GL::DYNAMIC_DRAW);
+
         // Indices
         let index_count: i32 = index_vals.len() as i32;
         let indices_memory_buffer = wasm_bindgen::memory()

@@ -1,6 +1,7 @@
 pub const SHADER: &str = r#"
     attribute vec4 aPosition;
     attribute vec3 aVertexNormal;
+    attribute vec3 aBaseColor;
 
     uniform mat4 uNormalsRotation;
     uniform mat4 uProjection;
@@ -16,8 +17,7 @@ pub const SHADER: &str = r#"
         vec4 transformedNormal = uNormalsRotation * vec4(aVertexNormal, 1.0);
         float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
         vec3 vLighting = ambientLight + (directionalLightColor * directional);
-        vec3 baseColor = vec3(0.5, 0.5, 0.8);
 
-        vColor = vec4(baseColor * vLighting, 1.0);
+        vColor = vec4(aBaseColor * vLighting, 1.0);
     }
 "#;
