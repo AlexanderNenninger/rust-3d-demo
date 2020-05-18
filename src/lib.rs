@@ -1,3 +1,5 @@
+use std::f32;
+
 extern crate wasm_bindgen;
 use wasm_bindgen::prelude::*;
 use web_sys::*;
@@ -69,7 +71,7 @@ impl DougsClient {
         let normals = common_funcs::get_grid_normals(constants::GRID_SIZE, &y_vals);
 
         // Colors
-        let colors = vertices.clone();
+        let colors = vertices.clone().into_iter().map(|v| v.max(0.).min(1.)).collect();
 
         self.program_mesh.render(
             &self.gl,

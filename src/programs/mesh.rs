@@ -131,7 +131,7 @@ impl Mesh {
             color_location,
             color_location + color_vals.len() as u32,
         );
-        gl.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &vert_array, GL::DYNAMIC_DRAW);
+        gl.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &color_array, GL::DYNAMIC_DRAW);
 
         // Indices
         let index_count: i32 = index_vals.len() as i32;
