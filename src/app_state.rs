@@ -44,6 +44,7 @@ pub struct AppState {
     pub mouse_y: f32,
     pub rotation_x_axis: f32,
     pub rotation_y_axis: f32,
+    pub scale: f32,
     pub time: f32,
 }
 
@@ -61,6 +62,7 @@ impl AppState {
             mouse_y: -1.,
             rotation_x_axis: -0.5,
             rotation_y_axis: -0.5,
+            scale: super::constants::Z_PLANE,
             time: 0.,
         }
     }
@@ -97,6 +99,16 @@ pub fn update_mouse_position(x: f32, y: f32) {
         mouse_y: inverted_y,
         rotation_x_axis: data.rotation_x_axis + rotation_x_delta,
         rotation_y_axis: data.rotation_y_axis - rotation_y_delta,
+        ..*data.clone()
+    });
+}
+
+pub fn update_mouse_wheel(y_delta: f32) {
+    let mut data = APP_STATE.lock().unwrap();
+    let mut scale = data.scale - y_delta * 0.05;
+    scale = scale.min(-super::constants::Z_NEAR).max(-super::constants::Z_FAR);
+    *data = Arc::new(AppState {
+        scale: scale,
         ..*data.clone()
     });
 }

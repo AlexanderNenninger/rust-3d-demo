@@ -90,6 +90,7 @@ impl Graph3D {
             canvas_width,
             rotation_angle_x_axis,
             rotation_angle_y_axis,
+            super::super::constants::Z_PLANE,
         );
 
         gl.uniform_matrix4fv_with_f32_array(

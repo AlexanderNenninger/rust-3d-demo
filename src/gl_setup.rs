@@ -14,6 +14,7 @@ pub fn initialize_webgl_context() -> Result<WebGlRenderingContext, JsValue> {
     attach_mouse_down_handler(&canvas)?;
     attach_mouse_up_handler(&canvas)?;
     attach_mouse_move_handler(&canvas)?;
+    attach_mouse_wheel_handler(&canvas)?;
 
     gl.enable(GL::BLEND);
     gl.blend_func(GL::SRC_ALPHA, GL::ONE_MINUS_SRC_ALPHA);
@@ -54,6 +55,18 @@ fn attach_mouse_move_handler(canvas: &HtmlCanvasElement) -> Result<(), JsValue> 
 
     let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
     canvas.add_event_listener_with_callback("mousemove", handler.as_ref().unchecked_ref())?;
+    handler.forget();
+
+    Ok(())
+}
+
+fn attach_mouse_wheel_handler(canvas: &HtmlCanvasElement) -> Result<(), JsValue> {
+    let handler = move |event: web_sys::WheelEvent| {
+        super::app_state::update_mouse_wheel(event.delta_y() as f32);
+    };
+
+    let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
+    canvas.add_event_listener_with_callback("wheel", handler.as_ref().unchecked_ref())?;
     handler.forget();
 
     Ok(())

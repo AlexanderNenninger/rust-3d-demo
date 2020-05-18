@@ -46,6 +46,7 @@ impl Mesh {
         canvas_width: f32,
         rotation_angle_x_axis: f32,
         rotation_angle_y_axis: f32,
+        scale: f32,
         vertex_vals: &Vec<f32>,
         normal_vals: &Vec<f32>,
         index_vals: &Vec<u16>,
@@ -61,6 +62,7 @@ impl Mesh {
             canvas_width,
             rotation_angle_x_axis,
             rotation_angle_y_axis,
+            scale,
         );
         // Bind constants
         gl.uniform_matrix4fv_with_f32_array(

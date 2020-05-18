@@ -114,6 +114,7 @@ pub fn get_3d_matrices(
     canvas_width: f32,
     rotation_angle_x_axis: f32,
     rotation_angle_y_axis: f32,
+    zoom: f32,
 ) -> Matrices3D {
     let mut return_var = Matrices3D {
         normals_rotation: [0.; 16],
@@ -144,7 +145,7 @@ pub fn get_3d_matrices(
     let translation_matrix: [f32; 16] = translation_matrix(
         -1. + scale_x + 2. * left / canvas_width,
         -1. + scale_y + 2. * bottom / canvas_height,
-        Z_PLANE,
+        zoom,
     );
 
     let scale_matrix: [f32; 16] = scaling_matrix(scale, scale, 0.);

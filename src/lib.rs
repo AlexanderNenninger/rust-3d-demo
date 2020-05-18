@@ -13,17 +13,7 @@ mod constants;
 mod gl_setup;
 mod programs;
 mod shaders;
-
-// Write to browserv console
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = console)]
-    fn log(s: &str);
-}
-
-pub fn debug_log<T: std::fmt::Debug>(obj: &T, message: &str) {
-    log(&format!("{0} :{1:?}", message, obj));
-}
+pub mod debug;
 
 // Tidy variable management
 #[wasm_bindgen]
@@ -78,6 +68,7 @@ impl DougsClient {
         // Normals
         let normals = common_funcs::get_grid_normals(constants::GRID_SIZE, &y_vals);
 
+        debug::debug_log(&curr_state.scale, "Scale");
 
         self.program_mesh.render(
             &self.gl,
@@ -89,6 +80,7 @@ impl DougsClient {
             curr_state.canvas_width,
             curr_state.rotation_x_axis,
             curr_state.rotation_y_axis,
+            curr_state.scale,
             &vertices,
             &normals,
             &indices,
