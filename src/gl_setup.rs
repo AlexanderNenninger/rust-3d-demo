@@ -15,6 +15,9 @@ pub fn initialize_webgl_context() -> Result<WebGlRenderingContext, JsValue> {
     attach_mouse_up_handler(&canvas)?;
     attach_mouse_move_handler(&canvas)?;
     attach_mouse_wheel_handler(&canvas)?;
+    attach_touch_start_handler(&canvas)?;
+    attach_touch_stop_handler(&canvas)?;
+    attach_touch_move_handler(&canvas)?;
 
     gl.enable(GL::BLEND);
     gl.blend_func(GL::SRC_ALPHA, GL::ONE_MINUS_SRC_ALPHA);
@@ -67,6 +70,44 @@ fn attach_mouse_wheel_handler(canvas: &HtmlCanvasElement) -> Result<(), JsValue>
 
     let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
     canvas.add_event_listener_with_callback("wheel", handler.as_ref().unchecked_ref())?;
+    handler.forget();
+
+    Ok(())
+}
+
+// Touch Screen Controls
+fn attach_touch_start_handler(canvas: &HtmlCanvasElement) -> Result<(), JsValue> {
+    let handler = move |event: web_sys::TouchEvent| {
+        super::app_state::update_mouse_down(event.layer_x() as f32, event.layer_y() as f32, true);
+    };
+
+    let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
+    canvas.add_event_listener_with_callback("touchstart", handler.as_ref().unchecked_ref())?;
+    handler.forget();
+
+    Ok(())
+}
+
+fn attach_touch_stop_handler(canvas: &HtmlCanvasElement) -> Result<(), JsValue> {
+    let handler = move |event: web_sys::TouchEvent| {
+        super::app_state::update_mouse_down(event.layer_x() as f32, event.layer_y() as f32, false);
+    };
+
+    let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
+    canvas.add_event_listener_with_callback("touchend", handler.as_ref().unchecked_ref())?;
+    handler.forget();
+
+    Ok(())
+}
+
+fn attach_touch_move_handler(canvas: &HtmlCanvasElement) -> Result<(), JsValue> {
+    let handler = move |event: web_sys::TouchEvent| {
+        super::debug::debug_log(&event, "TouchEvent");
+        super::app_state::update_mouse_position(event.layer_x() as f32, event.layer_y() as f32);
+    };
+
+    let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
+    canvas.add_event_listener_with_callback("touchmove", handler.as_ref().unchecked_ref())?;
     handler.forget();
 
     Ok(())

@@ -68,8 +68,6 @@ impl DougsClient {
         // Normals
         let normals = common_funcs::get_grid_normals(constants::GRID_SIZE, &y_vals);
 
-        debug::debug_log(&curr_state.scale, "Scale");
-
         self.program_mesh.render(
             &self.gl,
             curr_state.control_bottom,
