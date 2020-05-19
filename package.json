@@ -1,7 +1,7 @@
 {
     "scripts": {
         "build": "webpack --mode production",
-        "deploy":"cp dist/* ~/www/html && cp pkg/* ~/www/html",
+        "deploy":"rm -rf ~/www/html/* && cp dist/* ~/www/html && cp pkg/* ~/www/html",
         "dev": "webpack-dev-server --host 0.0.0.0 --port 4000 --open --disableHostCheck true"
     },
     "devDependencies": {
